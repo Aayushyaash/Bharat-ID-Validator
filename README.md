@@ -168,10 +168,8 @@ pip install -r requirements.txt
 
 ### 🏷️ Original Model Attribution
 
-The YOLO models used in this project were sourced from the [Indian ID Validator Model Repository](https://huggingface.co/logasanjeev/indian-id-validator) created by LOGASANJEEV. These models are licensed under the MIT License.
-
-**Model Repository**: [https://huggingface.co/logasanjeev/indian-id-validator](https://huggingface.co/logasanjeev/indian-id-validator)
-**Author**: LOGASANJEEV
+**Model Repository**: [https://huggingface.co/logasanjeev/indian-id-validator](https://huggingface.co/logasanjeev/indian-id-validator) </br>
+**Author**: LOGASANJEEV </br>
 **License**: MIT License
 
 The original models include:
