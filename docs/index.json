@@ -1,0 +1,345 @@
+{
+  "project": "ID Validator Service",
+  "structure": {
+    "root": {
+      "files": [
+        {
+          "path": ".env.example",
+          "type": "config",
+          "layer": "config",
+          "purpose": "Example environment variables file"
+        },
+        {
+          "path": ".gitignore",
+          "type": "config",
+          "layer": "infrastructure",
+          "purpose": "Git ignore rules"
+        },
+        {
+          "path": "mkdocs.yml",
+          "type": "config",
+          "layer": "infrastructure",
+          "purpose": "MkDocs documentation configuration"
+        },
+        {
+          "path": "pyproject.toml",
+          "type": "config",
+          "layer": "infrastructure",
+          "purpose": "Project configuration (Poetry, build, static analysis)"
+        },
+        {
+          "path": "README.md",
+          "type": "documentation",
+          "layer": "docs",
+          "purpose": "Main project documentation with setup and usage instructions"
+        },
+        {
+          "path": "requirements.lock",
+          "type": "config",
+          "layer": "config",
+          "purpose": "Locked dependencies file"
+        },
+        {
+          "path": "requirements.txt",
+          "type": "config",
+          "layer": "config",
+          "purpose": "Pinned Python dependencies"
+        }
+      ]
+    },
+    "app": {
+      "files": [
+        {
+          "path": "app/main.py",
+          "type": "python",
+          "layer": "api-handlers",
+          "purpose": "FastAPI application entry point with CORS, middleware, and exception handling"
+        }
+      ],
+      "subdirs": {
+        "api": {
+          "subdirs": {
+            "v1": {
+              "files": [
+                {
+                  "path": "app/api/v1/api.py",
+                  "type": "python",
+                  "layer": "api-handlers",
+                  "purpose": "API router configuration"
+                }
+              ],
+              "subdirs": {
+                "endpoints": {
+                  "files": [
+                    {
+                      "path": "app/api/v1/endpoints/documents.py",
+                      "type": "python",
+                      "layer": "api-handlers",
+                      "purpose": "Document processing endpoints (classify, extract, classify-and-extract)"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "core": {
+          "files": [
+            {
+              "path": "app/core/config.py",
+              "type": "python",
+              "layer": "config",
+              "purpose": "Application settings and configuration"
+            },
+            {
+              "path": "app/core/errors.py",
+              "type": "python",
+              "layer": "core-logic",
+              "purpose": "Error handling and response models"
+            },
+            {
+              "path": "app/core/logging.py",
+              "type": "python",
+              "layer": "core-logic",
+              "purpose": "Logging configuration and setup"
+            },
+            {
+              "path": "app/core/middleware.py",
+              "type": "python",
+              "layer": "api-handlers",
+              "purpose": "Custom middleware implementations"
+            }
+          ]
+        },
+        "schemas": {
+          "files": [
+            {
+              "path": "app/schemas/document.py",
+              "type": "python",
+              "layer": "data-schema",
+              "purpose": "Pydantic models for API request/response validation"
+            }
+          ]
+        },
+        "services": {
+          "files": [
+            {
+              "path": "app/services/combined_pipeline.py",
+              "type": "python",
+              "layer": "core-logic",
+              "purpose": "Combined classification and extraction pipeline"
+            },
+            {
+              "path": "app/services/extraction.py",
+              "type": "python",
+              "layer": "core-logic",
+              "purpose": "Document field extraction logic with two-phase OCR strategy"
+            },
+            {
+              "path": "app/services/image_utils.py",
+              "type": "python",
+              "layer": "core-logic",
+              "purpose": "Image processing utilities (rotation, extension, reading)"
+            },
+            {
+              "path": "app/services/model_loader.py",
+              "type": "python",
+              "layer": "core-logic",
+              "purpose": "Singleton model loader for YOLO and PaddleOCR models"
+            },
+            {
+              "path": "app/services/pipeline.py",
+              "type": "python",
+              "layer": "core-logic",
+              "purpose": "Document classification pipeline with orientation detection and YOLO classification"
+            },
+            {
+              "path": "app/services/text_utils.py",
+              "type": "python",
+              "layer": "core-logic",
+              "purpose": "Text formatting and cleaning utilities"
+            }
+          ]
+        }
+      }
+    },
+    "docs": {
+      "files": [],
+      "purpose": "Documentation directory (currently empty)"
+    },
+    "logs": {
+      "files": [],
+      "purpose": "Application logs directory (JSON format, ignored by git)"
+    },
+    "models": {
+      "files": [
+        {
+          "path": "models/Aadhaar_Card.pt",
+          "type": "model",
+          "layer": "core-logic",
+          "purpose": "YOLO model for Aadhaar card field detection"
+        },
+        {
+          "path": "models/Driving_License.pt",
+          "type": "model",
+          "layer": "core-logic",
+          "purpose": "YOLO model for Driving License field detection"
+        },
+        {
+          "path": "models/Id_Classifier.pt",
+          "type": "model",
+          "layer": "core-logic",
+          "purpose": "YOLO model for document type classification"
+        },
+        {
+          "path": "models/Pan_Card.pt",
+          "type": "model",
+          "layer": "core-logic",
+          "purpose": "YOLO model for PAN card field detection"
+        },
+        {
+          "path": "models/Passport.pt",
+          "type": "model",
+          "layer": "core-logic",
+          "purpose": "YOLO model for Passport field detection"
+        },
+        {
+          "path": "models/Voter_Id.pt",
+          "type": "model",
+          "layer": "core-logic",
+          "purpose": "YOLO model for Voter ID field detection"
+        },
+        {
+          "path": "models/config.json",
+          "type": "config",
+          "layer": "data-schema",
+          "purpose": "Configuration file mapping document types to models and defining field schemas"
+        }
+      ]
+    },
+    "samples": {
+      "files": [
+        {
+          "path": "samples/aadhaar_back.jpg",
+          "type": "image",
+          "layer": "tests",
+          "purpose": "Sample Aadhaar back image for testing"
+        },
+        {
+          "path": "samples/aadhaar_front.jpg",
+          "type": "image",
+          "layer": "tests",
+          "purpose": "Sample Aadhaar front image for testing"
+        },
+        {
+          "path": "samples/driving_license_front.jpg",
+          "type": "image",
+          "layer": "tests",
+          "purpose": "Sample driving license front image for testing"
+        },
+        {
+          "path": "samples/pan_front.jpg",
+          "type": "image",
+          "layer": "tests",
+          "purpose": "Sample PAN card front image for testing"
+        },
+        {
+          "path": "samples/passport_front.jpg",
+          "type": "image",
+          "layer": "tests",
+          "purpose": "Sample passport front image for testing"
+        },
+        {
+          "path": "samples/voter_back.jpg",
+          "type": "image",
+          "layer": "tests",
+          "purpose": "Sample voter ID back image for testing"
+        },
+        {
+          "path": "samples/voter_front.jpg",
+          "type": "image",
+          "layer": "tests",
+          "purpose": "Sample voter ID front image for testing"
+        }
+      ]
+    },
+    "tests": {
+      "files": [
+        {
+          "path": "tests/test_classification.py",
+          "type": "python",
+          "layer": "tests",
+          "purpose": "Tests for document classification functionality"
+        },
+        {
+          "path": "tests/test_context_fixes.py",
+          "type": "python",
+          "layer": "tests",
+          "purpose": "Tests for context-related fixes"
+        },
+        {
+          "path": "tests/test_integration.py",
+          "type": "python",
+          "layer": "tests",
+          "purpose": "Integration tests"
+        },
+        {
+          "path": "tests/test_schemas.py",
+          "type": "python",
+          "layer": "tests",
+          "purpose": "Tests for schema validation"
+        },
+        {
+          "path": "tests/test_unwarp.py",
+          "type": "python",
+          "layer": "tests",
+          "purpose": "Tests for document unwarping functionality"
+        }
+      ],
+      "subdirs": {
+        "api": {
+          "files": [
+            {
+              "path": "tests/api/test_documents.py",
+              "type": "python",
+              "layer": "tests",
+              "purpose": "API tests for document endpoints"
+            }
+          ]
+        },
+        "services": {
+          "files": [
+            {
+              "path": "tests/services/test_extraction.py",
+              "type": "python",
+              "layer": "tests",
+              "purpose": "Service-level tests for extraction functionality"
+            }
+          ]
+        },
+        "output": {
+          "files": [],
+          "purpose": "Test output directory"
+        }
+      }
+    }
+  },
+  "excluded_dirs": [
+    "venv/",
+    "app/__pycache__/",
+    ".git/",
+    ".pytest_cache/",
+    ".qwen/",
+    ".rules/",
+    ".gemini/"
+  ],
+  "layer_summary": {
+    "core-logic": 19,
+    "api-handlers": 5,
+    "infrastructure": 4,
+    "data-schema": 2,
+    "tests": 9,
+    "docs": 1,
+    "config": 6
+  }
+}

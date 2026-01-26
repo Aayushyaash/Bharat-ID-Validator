@@ -1,0 +1,57 @@
+# Logs
+logs/
+*.log
+
+# Python bytecode
+**/__pycache__/
+*.py[cod]
+*$py.class
+.Python
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Environment variables
+.env
+.env.local
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+*.cover
+.tox/
+.nox/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+*.egg
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# System
+.DS_Store
+Thumbs.db
+
+# Models (keep config, ignore weights and cache)
+models/*.pt
+models/.cache/
+!models/config.json
+
+# Project specific
+samples/
+tests/output/
+
+# AI assistants
+.gemini/
+.qwen/
+.rules/

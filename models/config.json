@@ -1,0 +1,374 @@
+  {
+    "models": {
+      "Id_Classifier": {
+        "type": "classification",
+        "path": "models/Id_Classifier.pt",
+        "classes": [
+          "aadhar_back",
+          "aadhar_front",
+          "driving_license_back",
+          "driving_license_front",
+          "pan_card_front",
+          "passport",
+          "voter_id"
+        ]
+      },
+      "Aadhaar": {
+        "type": "detection",
+        "path": "models/Aadhaar_Card.pt",
+        "classes": [
+          "Aadhaar_Number",
+          "Aadhaar_DOB",
+          "Aadhaar_Gender",
+          "Aadhaar_Name",
+          "Aadhaar_Address",
+          "aadhaar_address"
+        ],
+        "output_mapping": {
+          "Aadhaar_Number": "Aadhaar",
+          "Aadhaar_DOB": "DOB",
+          "Aadhaar_Gender": "Gender",
+          "Aadhaar_Name": "Name",
+          "Aadhaar_Address": "Address",
+          "aadhaar_address": "Address"
+        }
+      },
+      "Pan_Card": {
+        "type": "detection",
+        "path": "models/Pan_Card.pt",
+        "classes": [
+          "PAN",
+          "Name",
+          "Father_Name",
+          "DOB",
+          "Pan_Card"
+        ],
+        "output_mapping": {
+          "0": "PAN",
+          "1": "Name",
+          "2": "Father's Name",
+          "3": "DOB",
+          "4": "Pan_Card"
+        }
+      },
+      "Passport": {
+        "type": "detection",
+        "path": "models/Passport.pt",
+        "classes": [
+          "address",
+          "code",
+          "dob",
+          "doi",
+          "exp",
+          "gender",
+          "idcard",
+          "mrz1",
+          "mrz2",
+          "name",
+          "nation",
+          "nationality",
+          "poi"
+        ],
+        "output_mapping": {
+          "address": "Address",
+          "code": "Code",
+          "dob": "DOB",
+          "doi": "DOI",
+          "exp": "EXP",
+          "gender": "Gender",
+          "idcard": "ID_Card",
+          "mrz1": "MRZ1",
+          "mrz2": "MRZ2",
+          "name": "Name",
+          "nation": "Nation",
+          "nationality": "Nationality",
+          "poi": "POI"
+        }
+      },
+      "Voter_Id": {
+        "type": "detection",
+        "path": "models/Voter_Id.pt",
+        "classes": [
+          "address",
+          "age",
+          "age_as_on",
+          "card_voterid_1_back",
+          "card_voterid_1_front",
+          "card_voterid_2_back",
+          "card_voterid_2_front",
+          "card_voterid_3_back",
+          "card_voterid_3_front",
+          "date",
+          "date_of_issue",
+          "election",
+          "father",
+          "gender",
+          "name",
+          "point",
+          "portrait",
+          "symbol",
+          "voter_id"
+        ],
+        "output_mapping": {
+          "address": "Address",
+          "age": "Age",
+          "age_as_on": "DOB",
+          "card_voterid_1_back": "Card_VoterID_1_Back",
+          "card_voterid_1_front": "Card_VoterID_1_Front",
+          "card_voterid_2_back": "Card_VoterID_2_Back",
+          "card_voterid_2_front": "Card_VoterID_2_Front",
+          "card_voterid_3_back": "DOB",
+          "card_voterid_3_front": "Date of Issue",
+          "date": "Election",
+          "date_of_issue": "Father",
+          "election": "Gender",
+          "father": "Name",
+          "gender": "Point",
+          "name": "Portrait",
+          "point": "Symbol",
+          "portrait": "Voter ID",
+          "symbol": "Portrait",
+          "voter_id": "Card_VoterID_1_Back"
+        }
+      },
+      "Driving_License": {
+        "type": "detection",
+        "path": "models/Driving_License.pt",
+        "classes": [
+          "add",
+          "blood_group",
+          "dl_no",
+          "dob",
+          "name",
+          "relation_with",
+          "rto",
+          "state",
+          "vehicle_type"
+        ],
+        "output_mapping": {
+          "add": "Address",
+          "blood_group": "Blood Group",
+          "dl_no": "DL No",
+          "dob": "DOB",
+          "name": "Name",
+          "relation_with": "Relation With",
+          "rto": "RTO",
+          "state": "State",
+          "vehicle_type": "Vehicle Type"
+        }
+      }
+    },
+    "doc_type_to_model": {
+      "aadhaar_front": "Aadhaar",
+      "aadhaar_back": "Aadhaar",
+      "pan_card": "Pan_Card",
+      "pan_card_front": "Pan_Card",
+      "passport": "Passport",
+      "voter_id": "Voter_Id",
+      "driving_license": "Driving_License",
+      "driving_license_front": "Driving_License",
+      "driving_license_back": "Driving_License"
+    },
+    "field_filters": {
+      "aadhaar_front": [
+        "Aadhaar_Number",
+        "Aadhaar_DOB",
+        "Aadhaar_Gender",
+        "Aadhaar_Name"
+      ],
+      "aadhaar_back": [
+        "Aadhaar_Number",
+        "Aadhaar_Address",
+        "aadhaar_address"
+      ],
+      "pan_card_front": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ],
+      "passport": [
+        "address",
+        "code",
+        "dob",
+        "doi",
+        "exp",
+        "gender",
+        "idcard",
+        "mrz1",
+        "mrz2",
+        "name",
+        "nation",
+        "nationality",
+        "poi"
+      ],
+      "voter_id": [
+        "address",
+        "age",
+        "age_as_on",
+        "card_voterid_3_back",
+        "card_voterid_3_front",
+        "date_of_issue",
+        "election",
+        "father",
+        "portrait"
+      ],
+      "driving_license_front": [
+        "add",
+        "blood_group",
+        "dl_no",
+        "dob",
+        "name",
+        "relation_with",
+        "rto",
+        "state",
+        "vehicle_type"
+      ],
+      "driving_license_back": [
+        "add",
+        "blood_group",
+        "dl_no",
+        "dob",
+        "name",
+        "relation_with",
+        "rto",
+        "state",
+        "vehicle_type"
+      ],
+      "pan_card": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ],
+      "driving_license": [
+        "add",
+        "blood_group",
+        "dl_no",
+        "dob",
+        "name",
+        "relation_with",
+        "rto",
+        "state",
+        "vehicle_type"
+      ]
+    },
+    "output_schema": {
+      "aadhaar_front": {
+        "fields": [
+          "Name",
+          "Aadhaar",
+          "Gender",
+          "DOB"
+        ]
+      },
+      "aadhaar_back": {
+        "fields": [
+          "Aadhaar",
+          "Address"
+        ]
+      },
+      "voter_id": {
+        "fields": [
+          "Name",
+          "Voter ID",
+          "Gender",
+          "DOB",
+          "Date of Issue",
+          "Father",
+          "Address"
+        ]
+      },
+      "passport": {
+        "fields": [
+          "Name",
+          "Code",
+          "DOB",
+          "Gender",
+          "Nation",
+          "Nationality",
+          "Place of issue",
+          "Date of issue",
+          "Date of expiry",
+          "Address",
+          "MRZ1",
+          "MRZ2"
+        ],
+        "field_mapping": {
+          "POI": "Place of issue",
+          "DOI": "Date of issue",
+          "EXP": "Date of expiry"
+        }
+      },
+      "pan_card_front": {
+        "fields": [
+          "Pan",
+          "Name",
+          "Father's Name",
+          "DOB"
+        ],
+        "field_mapping": {
+          "PAN": "Pan"
+        }
+      },
+      "driving_license_front": {
+        "fields": [
+          "Name",
+          "DL No",
+          "DOB",
+          "Blood Group",
+          "Relation with",
+          "Address",
+          "RTO",
+          "State",
+          "Vehicle Type"
+        ],
+        "field_mapping": {
+          "Relation With": "Relation with"
+        }
+      },
+      "driving_license_back": {
+        "fields": [
+          "Name",
+          "DL No",
+          "DOB",
+          "Blood Group",
+          "Relation with",
+          "Address",
+          "RTO",
+          "State",
+          "Vehicle Type"
+        ],
+        "field_mapping": {
+          "Relation With": "Relation with"
+        }
+      },
+      "pan_card": {
+        "fields": [
+          "Pan",
+          "Name",
+          "Father's Name",
+          "DOB"
+        ],
+        "field_mapping": {
+          "PAN": "Pan"
+        }
+      },
+      "driving_license": {
+        "fields": [
+          "Name",
+          "DL No",
+          "DOB",
+          "Blood Group",
+          "Relation with",
+          "Address",
+          "RTO",
+          "State",
+          "Vehicle Type"
+        ],
+        "field_mapping": {
+          "Relation With": "Relation with"
+        }
+      }
+    }
+  }
