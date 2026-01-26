@@ -19,3 +19,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+PERSONAL LEARNING PROJECT DISCLAIMER: This project was created as a personal learning exercise to explore ID document validation systems. It represents one component of a larger identity verification system concept. It is not designed for production use and may contain security vulnerabilities. The author is not responsible for any damages or security breaches resulting from the use of this software in production environments.
