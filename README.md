@@ -507,7 +507,6 @@ This section documents planned improvements and known issues that are deferred f
 |------|-------------|
 | **CORS Hardening** | Replace wildcard `allow_origins=["*"]` with specific allowed domains to prevent CSRF attacks and credential leakage in production deployments. |
 | **Rate Limiting** | Add rate limiting middleware to protect against DoS attacks and API abuse. ML inference is computationally expensive and needs protection. |
-| **PII Log Sanitization** | Implement log filtering to prevent sensitive document data (Aadhaar numbers, addresses, names) from appearing in application logs. |
 
 #### Data Quality
 | Item | Description |
@@ -526,20 +525,21 @@ This section documents planned improvements and known issues that are deferred f
 | Item | Description |
 |------|-------------|
 | **OpenCV Dependency Consolidation** | Remove duplicate OpenCV packages from `requirements.txt`. Currently installs `opencv-contrib-python`, `opencv-python`, and `opencv-python-headless` - only one should be used. |
+| **Environment-Specific Configs** | Add separate configuration profiles for development, staging, and production environments with appropriate defaults for each. |
 
-### 🟢 Low Priority
+### 🟢 Considerations for Future
 
-#### Features
+#### CI/CD Pipeline
 | Item | Description |
 |------|-------------|
-| **HEAD Method Support** | Add HEAD method support to health check endpoints for more efficient monitoring. |
-| **Prometheus Metrics** | Rename or supplement `/metrics` endpoint to provide Prometheus-compatible metrics format for better observability integration. |
+| **GitHub Actions Workflow** | Implement CI/CD pipeline for automated linting (ruff/flake8), formatting checks (black), type checking (mypy), and test execution on pull requests. |
+| **Pre-commit Hooks** | Add pre-commit configuration for local development to catch issues before commits. |
 
-#### Testing
+#### Observability
 | Item | Description |
 |------|-------------|
-| **Edge Case Tests** | Add tests for corrupt images, zero-size bounding boxes, overlapping detections, and other edge cases. |
-| **Async Behavior Tests** | Add tests that verify actual async behavior rather than using sync wrappers. |
+| **Full Prometheus Integration** | Extend `/metrics` endpoint with actual Prometheus metrics including request latency histograms, model inference times, and error rates. |
+| **Distributed Tracing** | Add OpenTelemetry integration for distributed tracing across service boundaries. |
 
 
 ## 📄 License
