@@ -496,6 +496,51 @@ The application follows a modular, layered architecture with a clear separation 
 ### Security
 *   **CORS:** Currently configured `allow_origins=["*"]` for development convenience. **MUST BE RESTRICTED** to specific frontend domains in production.
 
+## 🔮 Future Upgrades
+
+This section documents planned improvements and known issues that are deferred for future implementation.
+
+### 🔴 High Priority
+
+#### Security
+| Item | Description |
+|------|-------------|
+| **CORS Hardening** | Replace wildcard `allow_origins=["*"]` with specific allowed domains to prevent CSRF attacks and credential leakage in production deployments. |
+| **Rate Limiting** | Add rate limiting middleware to protect against DoS attacks and API abuse. ML inference is computationally expensive and needs protection. |
+| **PII Log Sanitization** | Implement log filtering to prevent sensitive document data (Aadhaar numbers, addresses, names) from appearing in application logs. |
+
+#### Data Quality
+| Item | Description |
+|------|-------------|
+| **Voter_Id Output Mapping** | Fix incorrect field mappings in `models/config.json` for Voter_Id document type. Current mappings appear to have copy-paste errors (e.g., "name" mapped to "Portrait"). |
+
+### 🟡 Medium Priority
+
+#### Performance
+| Item | Description |
+|------|-------------|
+| **Batch Processing Support** | Add endpoints for processing multiple documents in a single request with streaming responses for large batches. |
+| **Async ML Inference** | Evaluate using `run_in_executor` patterns for CPU-bound ML operations to improve concurrent request handling. |
+
+#### Code Quality
+| Item | Description |
+|------|-------------|
+| **OpenCV Dependency Consolidation** | Remove duplicate OpenCV packages from `requirements.txt`. Currently installs `opencv-contrib-python`, `opencv-python`, and `opencv-python-headless` - only one should be used. |
+
+### 🟢 Low Priority
+
+#### Features
+| Item | Description |
+|------|-------------|
+| **HEAD Method Support** | Add HEAD method support to health check endpoints for more efficient monitoring. |
+| **Prometheus Metrics** | Rename or supplement `/metrics` endpoint to provide Prometheus-compatible metrics format for better observability integration. |
+
+#### Testing
+| Item | Description |
+|------|-------------|
+| **Edge Case Tests** | Add tests for corrupt images, zero-size bounding boxes, overlapping detections, and other edge cases. |
+| **Async Behavior Tests** | Add tests that verify actual async behavior rather than using sync wrappers. |
+
 
 ## 📄 License
 
