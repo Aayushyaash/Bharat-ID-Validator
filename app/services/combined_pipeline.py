@@ -51,7 +51,7 @@ def process_document_sync(
             - confidence: Classification confidence score (0.0 to 1.0)
             - is_valid: Whether confidence meets threshold
             - fields: Extracted field data dict or None if extraction skipped/failed
-            - extraction_message: Status message or error description
+            - message: Status message or error description
             
     Note:
         If classification confidence is below threshold, extraction is skipped
@@ -76,14 +76,14 @@ def process_document_sync(
             "confidence": confidence,
             "is_valid": False,
             "fields": None,
-            "extraction_message": "Classification confidence below threshold - extraction skipped"
+            "message": "Classification confidence below threshold - extraction skipped"
         }
         
     doc_type_mapped = pipeline.format_response(doc_type_raw)
     
     # --- EXTRACTION PHASE ---
     fields = None
-    extraction_message = None
+    message = None
     
     try:
         doc_type_normalized = normalize_doc_type_for_extraction(doc_type_raw)
@@ -96,11 +96,11 @@ def process_document_sync(
         )
         
         fields = extraction_result.get("fields", {})
-        extraction_message = extraction_result.get("message")
+        message = extraction_result.get("message")
         
     except Exception as e:
         logger.error(f"Extraction failed: {e}", exc_info=True)
-        extraction_message = str(e)
+        message = str(e)
         
     return {
         "filename": filename,
@@ -108,7 +108,7 @@ def process_document_sync(
         "confidence": confidence,
         "is_valid": is_valid,
         "fields": fields,
-        "extraction_message": extraction_message
+        "message": message
     }
 
 # Legacy alias
