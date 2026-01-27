@@ -1,5 +1,6 @@
 import json
 import logging
+import threading
 from pathlib import Path
 from ultralytics import YOLO
 from paddleocr import TextRecognition, DocImgOrientationClassification, PaddleOCR
@@ -8,13 +9,30 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
+
 class ModelLoader:
+    """
+    Singleton class for loading and managing ML models.
+    
+    Thread-safe implementation using double-checked locking pattern to ensure
+    only one instance is created even under concurrent access.
+    
+    Models loaded:
+        - YOLO models for document classification and field detection
+        - PaddleOCR models for text recognition and orientation detection
+    """
     _instance = None
+    _instance_lock = threading.Lock()
+    _load_lock = threading.Lock()
+    _models_loaded = False
 
     def __new__(cls):
+        # Double-checked locking for thread-safe singleton
         if cls._instance is None:
-            cls._instance = super(ModelLoader, cls).__new__(cls)
-            cls._instance._initialized = False
+            with cls._instance_lock:
+                if cls._instance is None:
+                    cls._instance = super(ModelLoader, cls).__new__(cls)
+                    cls._instance._initialized = False
         return cls._instance
 
     def __init__(self):
@@ -34,6 +52,7 @@ class ModelLoader:
         self._initialized = True
 
     def _load_config(self):
+        """Load model configuration from JSON file."""
         if not settings.MODEL_CONFIG_PATH.exists():
             logger.warning(f"Config file not found at {settings.MODEL_CONFIG_PATH}")
             return {}
@@ -41,70 +60,87 @@ class ModelLoader:
             return json.load(f)
 
     def load_models(self):
-        logger.info("Loading models...")
+        """
+        Load all ML models required for document processing.
         
-        # 1. Load YOLO Models from Config
-        models_cfg = self.model_config.get("models", {})
+        Thread-safe: Uses locking to prevent concurrent loading and
+        tracks loaded state to avoid redundant loading.
         
-        for model_name, cfg in models_cfg.items():
-            path_str = cfg.get("path")
+        Raises:
+            Exception: If core PaddleOCR models fail to load
+        """
+        # Thread-safe loading with state tracking
+        with self._load_lock:
+            if ModelLoader._models_loaded:
+                logger.info("Models already loaded, skipping...")
+                return
             
-            if path_str:
-                # Resolve path relative to project root (settings.BASE_DIR)
-                model_path = settings.BASE_DIR / path_str
+            logger.info("Loading models...")
+            
+            # 1. Load YOLO Models from Config
+            models_cfg = self.model_config.get("models", {})
+            
+            for model_name, cfg in models_cfg.items():
+                path_str = cfg.get("path")
                 
-                if model_path.exists():
-                    logger.info(f"Loading YOLO model: {model_name} from {model_path}")
-                    try:
-                        model = YOLO(str(model_path))
-                        self.detection_models[model_name] = model
-                        
-                        # Store explicit classes from config if provided
-                        explicit_classes = cfg.get("classes")
-                        if explicit_classes and isinstance(explicit_classes, list):
-                            # Map list index to class name: {0: "Name", 1: "DOB"...}
-                            self.class_mappings[model_name] = {i: name for i, name in enumerate(explicit_classes)}
+                if path_str:
+                    # Resolve path relative to project root (settings.BASE_DIR)
+                    model_path = settings.BASE_DIR / path_str
+                    
+                    if model_path.exists():
+                        logger.info(f"Loading YOLO model: {model_name} from {model_path}")
+                        try:
+                            model = YOLO(str(model_path))
+                            self.detection_models[model_name] = model
                             
-                    except Exception as e:
-                        logger.error(f"Failed to load {model_name}: {e}")
-                else:
-                    logger.error(f"Model file not found: {model_path}")
+                            # Store explicit classes from config if provided
+                            explicit_classes = cfg.get("classes")
+                            if explicit_classes and isinstance(explicit_classes, list):
+                                # Map list index to class name: {0: "Name", 1: "DOB"...}
+                                self.class_mappings[model_name] = {i: name for i, name in enumerate(explicit_classes)}
+                                
+                        except Exception as e:
+                            logger.error(f"Failed to load {model_name}: {e}")
+                    else:
+                        logger.error(f"Model file not found: {model_path}")
 
-        # 2. Load Document Orientation Model (Endpoint 1)
-        logger.info("Loading Document Orientation Model (PP-LCNet_x1_0_doc_ori)...")
-        try:
-            self.doc_orientation_model = DocImgOrientationClassification(model_name="PP-LCNet_x1_0_doc_ori")
-            logger.info("Document Orientation Model loaded.")
-        except Exception as e:
-            logger.error(f"Failed to load Document Orientation Model: {e}")
-            raise # Fail fast if core model fails
+            # 2. Load Document Orientation Model (Endpoint 1)
+            logger.info("Loading Document Orientation Model (PP-LCNet_x1_0_doc_ori)...")
+            try:
+                self.doc_orientation_model = DocImgOrientationClassification(model_name="PP-LCNet_x1_0_doc_ori")
+                logger.info("Document Orientation Model loaded.")
+            except Exception as e:
+                logger.error(f"Failed to load Document Orientation Model: {e}")
+                raise  # Fail fast if core model fails
 
-        # 3. Load Text Recognition Model (Endpoint 2)
-        logger.info("Loading Text Recognition Model (PP-OCRv5_server_rec)...")
-        try:
-            self.ocr_rec_model = TextRecognition(model_name="PP-OCRv5_server_rec")
-            logger.info("Text Recognition Model loaded.")
-        except Exception as e:
-            logger.error(f"Failed to load Text Recognition Model: {e}")
-            raise # Fail fast
+            # 3. Load Text Recognition Model (Endpoint 2)
+            logger.info("Loading Text Recognition Model (PP-OCRv5_server_rec)...")
+            try:
+                self.ocr_rec_model = TextRecognition(model_name="PP-OCRv5_server_rec")
+                logger.info("Text Recognition Model loaded.")
+            except Exception as e:
+                logger.error(f"Failed to load Text Recognition Model: {e}")
+                raise  # Fail fast
 
-        # 4. Load Full PaddleOCR Pipeline (fallback for multi-line text)
-        logger.info("Loading full PaddleOCR pipeline for fallback...")
-        try:
-            self.paddleocr_model = PaddleOCR(
-                use_doc_orientation_classify=False,
-                use_doc_unwarping=True,
-                use_textline_orientation=False,
-                text_detection_model_name="PP-OCRv5_server_det",
-                text_recognition_model_name="PP-OCRv5_server_rec",
-                lang='en'
-            )
-            logger.info("Full PaddleOCR pipeline loaded successfully.")
-        except Exception as e:
-            logger.error(f"Failed to load full PaddleOCR pipeline: {e}")
-            raise
+            # 4. Load Full PaddleOCR Pipeline (fallback for multi-line text)
+            logger.info("Loading full PaddleOCR pipeline for fallback...")
+            try:
+                self.paddleocr_model = PaddleOCR(
+                    use_doc_orientation_classify=False,
+                    use_doc_unwarping=True,
+                    use_textline_orientation=False,
+                    text_detection_model_name="PP-OCRv5_server_det",
+                    text_recognition_model_name="PP-OCRv5_server_rec",
+                    lang='en'
+                )
+                logger.info("Full PaddleOCR pipeline loaded successfully.")
+            except Exception as e:
+                logger.error(f"Failed to load full PaddleOCR pipeline: {e}")
+                raise
 
-        logger.info("Models loaded.")
+            # Mark models as loaded
+            ModelLoader._models_loaded = True
+            logger.info("All models loaded successfully.")
 
     @property
     def yolo_model(self):
