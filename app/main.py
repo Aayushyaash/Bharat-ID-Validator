@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -65,11 +65,37 @@ app.add_middleware(
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
-@app.get("/")
-async def root():
-    logger.info("Root endpoint accessed")
+
+@app.api_route("/", methods=["GET", "HEAD"])
+async def root(request: Request):
+    """Root endpoint - service status check."""
+    if request.method == "HEAD":
+        return Response(status_code=200)
     return {"message": "Id Validator Service is running"}
+
+
+@app.api_route("/health", methods=["GET", "HEAD"])
+async def health_check(request: Request):
+    """Health check endpoint for monitoring systems."""
+    if request.method == "HEAD":
+        return Response(status_code=200)
+    return {"status": "healthy", "service": settings.PROJECT_NAME}
+
+
+@app.api_route("/ready", methods=["GET", "HEAD"])
+async def readiness_check(request: Request):
+    """Readiness check - verifies models are loaded."""
+    is_ready = model_loader._models_loaded
+    status_code = 200 if is_ready else 503
+    if request.method == "HEAD":
+        return Response(status_code=status_code)
+    return {
+        "status": "ready" if is_ready else "not_ready",
+        "models_loaded": is_ready
+    }
+
 
 @app.get("/metrics")
 async def metrics():
+    """Basic metrics endpoint (placeholder for Prometheus integration)."""
     return {"status": "ok", "message": "endpoint is healthy"}
