@@ -15,6 +15,21 @@ def format_output(
 ) -> dict[str, str]:
     """
     Format extracted fields according to document type schema.
+    
+    Maps internal field names to display names and orders fields according
+    to the output schema defined in config. Missing fields are filled with "N/A".
+    
+    Args:
+        extracted_fields: Dictionary of {internal_field_name: extracted_text}
+        doc_type: Document type key for schema lookup (e.g., 'aadhaar_front')
+        config: Model configuration dictionary containing output_schema
+        
+    Returns:
+        Ordered dictionary of {display_name: value} with all expected fields
+        
+    Example:
+        Input: {'name': 'John Doe', 'dob': '01/01/1990'}
+        Output: {'Name': 'John Doe', 'DOB': '01/01/1990', 'Gender': 'N/A', ...}
     """
     output_schema = config.get("output_schema", {}).get(doc_type, {})
     field_order = output_schema.get("fields", [])
@@ -38,7 +53,23 @@ def format_output(
 def _validate_and_get_model(doc_type: str, loader: ModelLoader) -> tuple:
     """
     Validates document type and retrieves necessary model configuration.
-    Returns: (detection_model, allowed_fields, output_mapping)
+    
+    Performs validation to ensure the document type is supported and all
+    required models are loaded before extraction begins.
+    
+    Args:
+        doc_type: Document type key (e.g., 'aadhaar_front', 'pan_card')
+        loader: ModelLoader instance with models and configuration
+        
+    Returns:
+        Tuple of (detection_model, allowed_fields, output_mapping):
+            - detection_model: YOLO detection model for this document type
+            - allowed_fields: Set of field names to extract
+            - output_mapping: Dict mapping internal names to display names
+            
+    Raises:
+        ValueError: If document type is not supported
+        RuntimeError: If required detection or OCR model is not loaded
     """
     config = loader.model_config
     doc_mapping = config.get("doc_type_to_model", {})
@@ -73,7 +104,21 @@ def _detect_and_deduplicate(
 ) -> dict:
     """
     Runs YOLO detection and performs two-stage deduplication.
-    Returns: filtered_boxes dict {display_name: (box, conf, raw_label)}
+    
+    Stage 1: Keeps only the highest confidence bounding box per raw class name
+    Stage 2: Filters by allowed fields and maps to display names, keeping highest
+             confidence if multiple raw labels map to the same display name
+    
+    Args:
+        image: Input document image as numpy array (BGR format)
+        detection_model: YOLO detection model for field detection
+        allowed_fields: Set of raw field names to keep
+        output_mapping: Dict mapping raw field names to display names
+        doc_type: Document type for logging purposes
+        
+    Returns:
+        Dictionary of {display_name: (box, confidence, raw_label)} for each detected field
+        Returns empty dict if no valid bounding boxes detected
     """
     results = detection_model(image)
     
@@ -112,7 +157,26 @@ def _detect_and_deduplicate(
 
 def _process_single_roi(image: np.ndarray, box, display_name: str, loader: ModelLoader) -> str:
     """
-    Process a single ROI: Crop -> Rotate -> OCR Phase 1 -> OCR Phase 2.
+    Process a single Region of Interest (ROI) through the OCR pipeline.
+    
+    Implements a two-phase OCR strategy:
+    - Phase 1: Fast TextRecognition (~100-300ms) for single-line fields
+    - Phase 2: Full PaddleOCR with detection (fallback for multi-line text)
+    
+    Also handles vertical text detection using aspect ratio heuristics.
+    
+    Args:
+        image: Full document image as numpy array (BGR format)
+        box: YOLO detection box with xyxy coordinates
+        display_name: Field name for logging purposes
+        loader: ModelLoader instance with OCR models
+        
+    Returns:
+        Extracted text string, or empty string if extraction fails
+        
+    Note:
+        Phase 2 fallback adds ~1-3 seconds but significantly improves accuracy
+        for multi-line addresses and complex text layouts.
     """
     # Get coordinates
     x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
@@ -176,8 +240,30 @@ def _process_single_roi(image: np.ndarray, box, display_name: str, loader: Model
 
 def extract_data_v2(image: np.ndarray, doc_type: str, loader: ModelLoader) -> dict:
     """
-    Refactored extraction logic (V2).
-    Modularized into helper functions for better maintainability and testing.
+    Main extraction pipeline for document field extraction.
+    
+    Performs the complete extraction workflow:
+    1. Validates document type and loads appropriate models
+    2. Corrects document orientation (if orientation model available)
+    3. Detects field bounding boxes using YOLO
+    4. Applies two-stage deduplication (by raw label, then by display name)
+    5. Extracts text from each ROI using two-phase OCR
+    6. Formats output according to document schema
+    
+    Args:
+        image: Input document image as numpy array (BGR format)
+        doc_type: Document type key (e.g., 'aadhaar_front', 'pan_card', 'voter_id')
+        loader: ModelLoader instance with all required models
+        
+    Returns:
+        Dictionary containing:
+            - document_type: The input document type
+            - fields: Dict of {display_name: extracted_value} with "N/A" for missing fields
+            - message: Optional status message (present if no boxes detected)
+            
+    Raises:
+        ValueError: If document type is not supported
+        RuntimeError: If required models are not loaded
     """
     # 1. Validation
     detection_model, allowed_fields, output_mapping = _validate_and_get_model(doc_type, loader)

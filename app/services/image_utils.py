@@ -2,42 +2,46 @@ import numpy as np
 import cv2
 from fastapi import UploadFile
 
-async def read_image_file(file: UploadFile) -> np.ndarray:
+
+async def read_image_file(file: UploadFile) -> np.ndarray | None:
     """
-    Reads an uploaded file and converts it to an OpenCV image (numpy array).
+    Reads an uploaded file and converts it to an OpenCV image.
+    
+    Args:
+        file: FastAPI UploadFile object containing the image data
+        
+    Returns:
+        Image as numpy array in BGR format (OpenCV standard), or None if
+        the file cannot be decoded as an image
     """
     contents = await file.read()
     nparr = np.frombuffer(contents, np.uint8)
     image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
     return image
 
+
 def rotate_image(image: np.ndarray, angle: int) -> np.ndarray:
     """
-    Rotates an image by the specified angle (0, 90, 180, 270).
-    Angle is expected to be in degrees counter-clockwise.
+    Rotates an image by the specified angle.
+    
+    Supports only 90-degree increments (0, 90, 180, 270) using OpenCV's
+    efficient rotation functions. This is used for document orientation
+    correction after detecting the current rotation.
+    
+    Args:
+        image: Input image as numpy array
+        angle: Rotation angle in degrees clockwise (0, 90, 180, or 270)
+        
+    Returns:
+        Rotated image as numpy array, or original image if angle is 0
+        or not a supported value
+        
+    Example:
+        If document is detected as rotated 90° clockwise, pass angle=270
+        to rotate it back (or equivalently, 90° counter-clockwise)
     """
     if angle == 0:
         return image
-    
-    if angle == 90:
-        return cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE) # PaddleOCR returns 90 for "rotated 90 degrees", so we need to rotate back? 
-        # Wait, usually orientation detection tells you how much it is rotated. 
-        # If Paddle says "90", it usually means the text is at 90 degrees. To fix it, we rotate -90 (or 270) or generic logic.
-        # However, the plan says: "Extract angle (0, 90, 180, 270). If angle != 0, call image_utils.rotate_image."
-        # Let's assume the angle passed here is the *correction* angle or I need to deduce the correction.
-        # PaddleOCR `cls` output usually gives the angle of the text (0, 90, 180, 270). 
-        # If text is at 90, we probably want to rotate it -90 (270) to make it upright? 
-        # Or if the plan implies "rotate_image" takes the DETECTED angle and corrects it.
-        # Let's implement generic rotation for now.
-        pass
-    
-    # Actually, cv2.rotate constants are:
-    # ROTATE_90_CLOCKWISE
-    # ROTATE_180
-    # ROTATE_90_COUNTERCLOCKWISE
-    
-    # If the input angle is 90, I will rotate 90 clockwise? Or counter? 
-    # Standard interpretation: If I want to rotate BY 90 degrees.
     
     if angle == 90:
         return cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)

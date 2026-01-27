@@ -28,8 +28,26 @@ def _extract_class_id_from_paddle_result(res_item: Any) -> int:
 
 def detect_orientation(image: np.ndarray, loader: ModelLoader) -> tuple[np.ndarray, int]:
     """
-    Detects orientation and rotates the image if necessary.
-    Returns the corrected image and the detected angle.
+    Detects document orientation and corrects rotation if necessary.
+    
+    Uses PaddleOCR's document orientation model to detect if the document
+    is rotated (0°, 90°, 180°, or 270°) and applies the inverse rotation
+    to correct it.
+    
+    Args:
+        image: Input document image as numpy array (BGR format)
+        loader: ModelLoader instance with doc_orientation_model loaded
+        
+    Returns:
+        Tuple of (corrected_image, detected_angle):
+            - corrected_image: Orientation-corrected image (or original if no correction needed)
+            - detected_angle: The detected rotation angle (0, 90, 180, or 270)
+            
+    Note:
+        Returns original image unchanged if:
+            - Orientation model is not loaded
+            - Detection fails with an exception
+            - Document is already upright (0° detected)
     """
     orientation_angle = 0
     corrected_image = image
@@ -74,8 +92,26 @@ def detect_orientation(image: np.ndarray, loader: ModelLoader) -> tuple[np.ndarr
 
 def run_classification(image: np.ndarray, loader: ModelLoader) -> tuple[str, float]:
     """
-    Runs the YOLO classification model.
-    Returns document type and confidence.
+    Runs the YOLO classification model on a document image.
+    
+    Performs inference using the loaded YOLO model and extracts the
+    predicted document type and confidence score. Handles both
+    classification-style (probs) and detection-style (boxes) YOLO outputs.
+    
+    Args:
+        image: Input document image as numpy array (BGR format, should be orientation-corrected)
+        loader: ModelLoader instance with yolo_model loaded
+        
+    Returns:
+        Tuple of (document_type, confidence):
+            - document_type: Detected document class name (e.g., 'Aadhaar_Front', 'Pan_Card')
+                            Returns 'unknown' if classification fails
+            - confidence: Confidence score between 0.0 and 1.0
+                         Returns 0.0 if classification fails
+                         
+    Note:
+        Does NOT perform orientation correction - caller should pre-process image
+        using detect_orientation() if needed.
     """
     doc_type = "unknown"
     confidence = 0.0
@@ -123,7 +159,25 @@ def run_classification(image: np.ndarray, loader: ModelLoader) -> tuple[str, flo
 
 def format_response(doc_type: str) -> str:
     """
-    Generalizes document type string.
+    Generalizes document type string for API response.
+    
+    Converts specific document type variants (e.g., 'Aadhaar_Front', 'Aadhaar_Back')
+    into generalized types (e.g., 'aadhaar') for consistent API responses.
+    Also handles spelling normalization (e.g., 'aadhar' -> 'aadhaar').
+    
+    Args:
+        doc_type: Raw document type string from classification model
+        
+    Returns:
+        Generalized document type string (lowercase, no front/back suffix)
+        
+    Examples:
+        >>> format_response("Aadhaar_Front")
+        'aadhaar'
+        >>> format_response("Pan_Card")
+        'pan_card'
+        >>> format_response("unknown")
+        'unknown'
     """
     raw_type = doc_type.lower()
     final_doc_type = raw_type.replace("_front", "").replace("_back", "")
@@ -139,7 +193,27 @@ def format_response(doc_type: str) -> str:
 
 def classify_document_sync(image: np.ndarray, loader: ModelLoader) -> dict:
     """
-    Synchronous version of classify_document that accepts a numpy array.
+    Complete synchronous document classification pipeline.
+    
+    Performs the full classification workflow: orientation detection,
+    YOLO classification, confidence threshold validation, and response formatting.
+    
+    Args:
+        image: Input document image as numpy array (BGR format)
+        loader: ModelLoader instance with all required models loaded
+        
+    Returns:
+        Dictionary containing:
+            - document_type: Generalized type ('aadhaar', 'pan_card', etc.) or 'unknown'
+            - confidence: Classification confidence score (0.0 to 1.0)
+            - is_valid: True if confidence >= CONFIDENCE_THRESHOLD
+            
+    Raises:
+        Exception: Re-raises any exception from orientation detection or classification
+        
+    Note:
+        Returns 'unknown' as document_type if confidence is below threshold,
+        even if the model detected a specific document type.
     """
     try:
         # 1. Orientation
