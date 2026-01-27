@@ -3,12 +3,35 @@ from fastapi.concurrency import run_in_threadpool
 from app.services.model_loader import get_model_loader, ModelLoader
 from app.services import pipeline, extraction, combined_pipeline, image_utils
 from app.schemas.document import DocumentResponse, ExtractionResponse, ClassifyAndExtractResponse
+from app.core.config import settings
 import logging
 import cv2
 import numpy as np
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+
+def _validate_file_size(file: UploadFile) -> None:
+    """
+    Validates that the uploaded file does not exceed MAX_FILE_SIZE.
+    
+    Args:
+        file: The uploaded file to validate
+        
+    Raises:
+        HTTPException: 413 if file size exceeds limit
+    """
+    if file.size and file.size > settings.MAX_FILE_SIZE:
+        max_mb = settings.MAX_FILE_SIZE / (1024 * 1024)
+        raise HTTPException(
+            status_code=413,
+            detail={
+                "code": "FILE_TOO_LARGE",
+                "message": f"File size exceeds maximum allowed size of {max_mb:.1f}MB"
+            }
+        )
+
 
 @router.post("/classify", response_model=DocumentResponse)
 async def classify_document_endpoint(
@@ -19,6 +42,9 @@ async def classify_document_endpoint(
     Classifies the uploaded document image.
     """
     try:
+        # Validate file size before reading into memory
+        _validate_file_size(file)
+        
         # Async I/O
         image = await image_utils.read_image_file(file)
         
@@ -47,6 +73,9 @@ async def extract_document_data(
     Extracts text fields from the document.
     """
     try:
+        # Validate file size before reading into memory
+        _validate_file_size(file)
+        
         # Async I/O
         image = await image_utils.read_image_file(file)
         
@@ -78,6 +107,9 @@ async def classify_and_extract_endpoint(
     Combined endpoint: Classifies the document and extracts fields in one call.
     """
     try:
+        # Validate file size before reading into memory
+        _validate_file_size(file)
+        
         # Async I/O
         image = await image_utils.read_image_file(file)
         
