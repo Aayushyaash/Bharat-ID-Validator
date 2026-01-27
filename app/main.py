@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+import asyncio
 from app.core.config import settings
 from app.api.v1.api import api_router
 from app.services.model_loader import model_loader
@@ -14,11 +15,12 @@ import logging
 setup_logging()
 logger = logging.getLogger(__name__)
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
+    # Startup - run model loading in a separate thread to avoid blocking the event loop
     logger.info("Starting up ID Validator Service...")
-    model_loader.load_models()
+    await asyncio.to_thread(model_loader.load_models)
     yield
     # Shutdown
     logger.info("Shutting down ID Validator Service...")
