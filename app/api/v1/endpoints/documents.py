@@ -61,7 +61,11 @@ async def classify_document_endpoint(
         raise he
     except Exception as e:
         logger.error(f"Classification failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=500, 
+            detail={"code": "INTERNAL_ERROR", "message": "Classification failed due to an internal error"}
+        )
+
 
 @router.post("/extract", response_model=ExtractionResponse)
 async def extract_document_data(
@@ -88,15 +92,24 @@ async def extract_document_data(
             result = await run_in_threadpool(extraction.extract_data, image, document_type, loader)
             return result
         except ValueError as ve:
-            raise HTTPException(status_code=400, detail=str(ve))
+            raise HTTPException(
+                status_code=400, 
+                detail={"code": "INVALID_DOCUMENT_TYPE", "message": str(ve)}
+            )
         except RuntimeError as re:
-            raise HTTPException(status_code=503, detail=str(re))
+            raise HTTPException(
+                status_code=503, 
+                detail={"code": "MODEL_NOT_LOADED", "message": str(re)}
+            )
             
     except HTTPException as he:
         raise he
     except Exception as e:
         logger.error(f"Extraction failed: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Internal Server Error")
+        raise HTTPException(
+            status_code=500, 
+            detail={"code": "INTERNAL_ERROR", "message": "Extraction failed due to an internal error"}
+        )
 
 @router.post("/classify-and-extract", response_model=ClassifyAndExtractResponse)
 async def classify_and_extract_endpoint(
@@ -123,4 +136,7 @@ async def classify_and_extract_endpoint(
         raise he
     except Exception as e:
         logger.error(f"Combined pipeline failed: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=500, 
+            detail={"code": "INTERNAL_ERROR", "message": "Document processing failed due to an internal error"}
+        )
