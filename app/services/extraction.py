@@ -219,7 +219,11 @@ def _process_single_roi(image: np.ndarray, box, display_name: str, loader: Model
     if not text_val and loader.paddleocr_model:
         logger.info(f"Triggering PaddleOCR fallback for '{display_name}'")
         try:
-            extended_crop = image_utils.extend_image(crop, padding_h=1, padding_w=20)
+            extended_crop = image_utils.extend_image(
+                crop, 
+                padding_h=settings.OCR_PADDING_HEIGHT, 
+                padding_w=settings.OCR_PADDING_WIDTH
+            )
             paddle_result = loader.paddleocr_model.predict(extended_crop)
             
             if paddle_result:
