@@ -61,6 +61,7 @@ Bharat ID Validator/
 │   └── services/       # Business Logic (ML Pipeline, Image Utils, ModelLoader)
 ├── docs/               # Project documentation and implementation plans
 ├── logs/               # Application logs (ignored by git, JSON format)
+├── media/              # Visual assets, GIFs for documentation, and sample test data
 ├── models/             # ML Model files (e.g., .pt) and config.json
 ├── tests/              # Pytest suite (Unit and Integration tests)
 ├── .env.example        # Example environment variables file
@@ -541,6 +542,27 @@ This section documents planned improvements and known issues that are deferred f
 | **Full Prometheus Integration** | Extend `/metrics` endpoint with actual Prometheus metrics including request latency histograms, model inference times, and error rates. |
 | **Distributed Tracing** | Add OpenTelemetry integration for distributed tracing across service boundaries. |
 
+
+## 🖼️ Visual Demos & Samples
+
+### API Endpoints in Action
+
+**1. Classification Endpoint** (`POST /api/v1/documents/classify`)
+![Endpoint 1](media/endpoint%201.gif)
+
+**2. Extraction Endpoint** (`POST /api/v1/documents/extract`)
+![Endpoint 2](media/endpoint%202.gif)
+
+**3. Combined Classification & Extraction** (`POST /api/v1/documents/classify-and-extract`)
+![Endpoint 3](media/endpoint%203.gif)
+
+### Sample Test Data
+
+**Mock Aadhaar Card (Front)**
+
+![Mock Aadhaar](media/mock_aadhaar_front.png)
+
+*Source: [News18](https://www.news18.com/tech/chatgpt-generating-fake-aadhaar-pan-card-new-image-feature-heres-why-we-shouldnt-misuse-it-what-we-know-amid-social-media-buzz-ws-l-9287099.html). This mock image was featured in a report highlighting the security risks and misuse of AI-generated fraudulent identity documents.*
 
 ## 📄 License
 

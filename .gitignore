@@ -50,6 +50,7 @@ models/.cache/
 # Project specific
 samples/
 tests/output/
+docs/prd.md
 
 # AI assistants
 .gemini/
