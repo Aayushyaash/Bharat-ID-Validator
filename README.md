@@ -1,21 +1,14 @@
 # Bharat ID Validator
 
-## ⚠️ Personal Prototype - Not For Production Use ⚠️
-
-**PERSONAL LEARNING PROJECT**: This project was created as a personal prototype to explore and learn about ID document validation systems. It represents one component of a larger identity verification system and is shared primarily as a demonstration of the author's learning journey. This is NOT intended for production use and may contain security vulnerabilities that could compromise systems if deployed in a live environment. The author is not responsible for any damages or security breaches resulting from the use of this software in production environments.
-
 ## Overview
+
 The **Bharat ID Validator** is a high-performance FastAPI application designed to classify, validate, and extract data from Indian identity documents. It leverages **Ultralytics YOLO** for classification and field detection, along with **PaddleOCR** modules for document orientation correction, text recognition, and intelligent multi-line text extraction fallback.
+
+Built as a personal learning project to explore ML model integration, document processing pipelines, and production-style API design with FastAPI.
 
 This service provides robust document processing capabilities for various Indian identity documents including Aadhaar cards, PAN cards, Driving Licenses, Passports, and Voter IDs. The system combines machine learning models with sophisticated image processing techniques to deliver accurate and reliable document validation and data extraction.
 
-**SECURITY WARNING**: This project contains potential security vulnerabilities including but not limited to:
-- Unrestricted file upload capabilities
-- Possible model exposure and adversarial attack vectors
-- Resource exhaustion risks during ML processing
-- Insufficient input validation for production environments
-
-Use only in controlled personal experimentation environments.
+> **Note**: Personal learning prototype — not intended for production deployment. See [Security Considerations](#-security-considerations) before use.
 
 ## ⚡ Performance & Architecture Highlights
 
@@ -131,8 +124,6 @@ This project represents a personal exploration and learning exercise focusing on
 - Implementing structured logging and error handling
 - Working with Indian identity document formats
 
-**Note**: This is a personal prototype demonstrating one component of a larger identity verification system. It is not a complete KYC or identity verification solution, but rather a learning artifact showing how this particular aspect of such a system might work.
-
 ## 🚀 Quick Start
 
 ### 1. Clone & Setup
@@ -160,9 +151,7 @@ pip install -r requirements.txt
     *   `Id_Classifier.pt` - Document type classification
     *   `Aadhaar_Card.pt`, `Pan_Card.pt`, `Passport.pt`, `Voter_Id.pt`, `Driving_License.pt` - Field detection models
 
-*   **Manual Setup Alternative**: Alternatively, you can manually place your trained YOLO models in the `models/` directory:
-    *   `Id_Classifier.pt` - Document type classification
-    *   `Aadhaar_Card.pt`, `Pan_Card.pt`, `Passport.pt`, `Voter_Id.pt`, `Driving_License.pt` - Field detection models
+*   **Manual Setup Alternative**: Alternatively, you can manually place your trained YOLO models in the `models/` directory.
 
 *   Update `models/config.json` with the correct class mappings and field configurations.
 *   *Note: PaddleOCR models (PP-LCNet_x1_0_doc_ori, PP-OCRv5_server_det, PP-OCRv5_server_rec) will download automatically on first run (~100-200MB total).*
@@ -236,7 +225,6 @@ Access the interactive Swagger UI at:
 If confidence is below the threshold or models fail, `document_type` will be "unknown" and `is_valid` will be `false`.
 
 ## Configuration
-The application can be configured using environment variables set directly or via a `.env` file (preferred for local development).
 
 | Setting | Type | Default | Description |
 | :-------------------- | :--- | :------ | :--------------------------------------------------------------------------------------------------------------------- |
@@ -273,11 +261,7 @@ When Phase 1 returns empty results (common with multi-line text), the system aut
 - Complex text layouts
 - Text near image edges
 
-**Monitoring**: Check logs for `"triggering PaddleOCR fallback"` messages to track fallback usage frequency.
-
 ## 🧪 Testing & Verification
-
-Run the comprehensive test suite (unit and integration tests) to verify your installation:
 
 ```bash
 pytest
@@ -293,29 +277,12 @@ pytest
 
 ### Health & Status
 *   `GET /` - Basic service status check.
-*   `GET /metrics` - Health check endpoint, returns `{"status": "ok", "message": "endpoint is healthy"}`. Logs are filtered.
+*   `GET /metrics` - Health check endpoint, returns `{"status": "ok", "message": "endpoint is healthy"}`.
 
 ### Document Processing
 
 #### 1. Classification Endpoint
 **`POST /api/v1/documents/classify`**
-
-Classifies an uploaded document image and returns the document type with confidence score.
-
-**Request:**
-*   Method: `POST`
-*   Content-Type: `multipart/form-data`
-*   Body: `file` - Image file (JPG, PNG, etc.)
-
-**Response:**
-```json
-{
-  "filename": "aadhaar_front.jpg",
-  "document_type": "aadhaar",
-  "confidence": 0.995,
-  "is_valid": true
-}
-```
 
 **Supported Document Types:**
 *   Aadhaar Card (Front/Back)
@@ -344,46 +311,6 @@ graph TD
 
 #### 2. Extraction Endpoint
 **`POST /api/v1/documents/extract`**
-
-Extracts specific field data from a document based on its type.
-
-**Request:**
-*   Method: `POST`
-*   Content-Type: `multipart/form-data`
-*   Body:
-    *   `file` - Image file
-    *   `document_type` - Type of document (e.g., `"aadhaar_front"`, `"pan_card"`, `"voter_id"`)
-
-**Response Example (Aadhaar Front):**
-```json
-{
-  "document_type": "aadhaar_front",
-  "fields": {
-    "Name": "John Doe",
-    "Aadhaar": "1234 5678 9012",
-    "Gender": "Male",
-    "DOB": "01/01/1990"
-  }
-}
-```
-
-**Response Example (Aadhaar Back with Multi-line Address):**
-```json
-{
-  "document_type": "aadhaar_back",
-  "fields": {
-    "Aadhaar": "1234 5678 9012",
-    "Address": "A/24, Link Road, New Delhi 110001"
-  }
-}
-```
-
-**Extraction Features:**
-*   Automatic field detection using YOLO models
-*   Fast text recognition for single-line fields
-*   **PaddleOCR Fallback**: Automatically triggered for multi-line text when primary OCR returns empty
-*   Regex-based text formatting and cleaning
-*   Returns `"N/A"` for fields not found in the document
 
 **Supported Extraction Types:**
 *   `aadhaar_front` - Name, Aadhaar Number, Gender, DOB
@@ -414,46 +341,7 @@ graph TD
 #### 3. Combined Endpoint
 **`POST /api/v1/documents/classify-and-extract`**
 
-Unified endpoint that performs both classification and field extraction in a single request.
-
-**Request:**
-*   Method: `POST`
-*   Content-Type: `multipart/form-data`
-*   Body: `file` - Image file
-
-**Response Example (Success):**
-```json
-{
-  "filename": "aadhaar.jpg",
-  "document_type": "aadhaar",
-  "confidence": 0.995,
-  "is_valid": true,
-  "fields": {
-    "Name": "John Doe",
-    "Aadhaar": "1234 5678 9012",
-    "Gender": "Male",
-    "DOB": "01/01/1990"
-  },
-  "extraction_message": null
-}
-```
-
-**Response Example (Low Confidence / Early Return):**
-```json
-{
-  "filename": "blurry.jpg",
-  "document_type": "unknown",
-  "confidence": 0.42,
-  "is_valid": false,
-  "fields": null,
-  "extraction_message": "Classification confidence below threshold - extraction skipped"
-}
-```
-
-**Key Features:**
-*   **Efficiency**: Reads image and corrects orientation only once.
-*   **Early Validation**: If classification confidence is below threshold, extraction is skipped entirely (~80-90% faster for invalid docs).
-*   **Simplicity**: Reduces client-side logic by combining two steps.
+Unified endpoint that performs both classification and field extraction in a single request with early-exit optimization — if classification confidence is below threshold, extraction is skipped entirely (~80-90% faster for invalid docs).
 
 #### Combined Flow Chart
 ```mermaid
@@ -486,10 +374,6 @@ graph TD
 ### Architecture
 The application follows a modular, layered architecture with a clear separation of concerns, adhering to FastAPI best practices.
 
-### Dependency Management
-*   Uses `requirements.txt` with pinned versions for reproducible environments.
-*   `pyproject.toml` defines project metadata and tool configurations.
-
 ### Observability
 *   **Structured Logging:** File logs are in JSON for easy parsing by log aggregators.
 *   **Trace IDs:** `X-Trace-ID` header is used for request correlation across logs.
@@ -499,49 +383,33 @@ The application follows a modular, layered architecture with a clear separation 
 
 ## 🔮 Future Upgrades
 
-This section documents planned improvements and known issues that are deferred for future implementation.
-
 ### 🔴 High Priority
 
 #### Security
 | Item | Description |
 |------|-------------|
-| **CORS Hardening** | Replace wildcard `allow_origins=["*"]` with specific allowed domains to prevent CSRF attacks and credential leakage in production deployments. |
-| **Rate Limiting** | Add rate limiting middleware to protect against DoS attacks and API abuse. ML inference is computationally expensive and needs protection. |
+| **CORS Hardening** | Replace wildcard `allow_origins=["*"]` with specific allowed domains. |
+| **Rate Limiting** | Add rate limiting middleware to protect against DoS attacks. |
 
 #### Data Quality
 | Item | Description |
 |------|-------------|
-| **Voter_Id Output Mapping** | Fix incorrect field mappings in `models/config.json` for Voter_Id document type. Current mappings appear to have copy-paste errors (e.g., "name" mapped to "Portrait"). |
+| **Voter_Id Output Mapping** | Fix incorrect field mappings in `models/config.json` for Voter_Id document type. |
 
 ### 🟡 Medium Priority
 
-#### Performance
 | Item | Description |
 |------|-------------|
-| **Batch Processing Support** | Add endpoints for processing multiple documents in a single request with streaming responses for large batches. |
-| **Async ML Inference** | Evaluate using `run_in_executor` patterns for CPU-bound ML operations to improve concurrent request handling. |
+| **Batch Processing** | Add endpoints for processing multiple documents in a single request. |
+| **Async ML Inference** | Evaluate `run_in_executor` patterns for CPU-bound ML operations. |
+| **OpenCV Dependency Consolidation** | Remove duplicate OpenCV packages from `requirements.txt`. |
 
-#### Code Quality
+### 🟢 Future Considerations
+
 | Item | Description |
 |------|-------------|
-| **OpenCV Dependency Consolidation** | Remove duplicate OpenCV packages from `requirements.txt`. Currently installs `opencv-contrib-python`, `opencv-python`, and `opencv-python-headless` - only one should be used. |
-| **Environment-Specific Configs** | Add separate configuration profiles for development, staging, and production environments with appropriate defaults for each. |
-
-### 🟢 Considerations for Future
-
-#### CI/CD Pipeline
-| Item | Description |
-|------|-------------|
-| **GitHub Actions Workflow** | Implement CI/CD pipeline for automated linting (ruff/flake8), formatting checks (black), type checking (mypy), and test execution on pull requests. |
-| **Pre-commit Hooks** | Add pre-commit configuration for local development to catch issues before commits. |
-
-#### Observability
-| Item | Description |
-|------|-------------|
-| **Full Prometheus Integration** | Extend `/metrics` endpoint with actual Prometheus metrics including request latency histograms, model inference times, and error rates. |
-| **Distributed Tracing** | Add OpenTelemetry integration for distributed tracing across service boundaries. |
-
+| **GitHub Actions CI/CD** | Automated linting, type checking, and test execution on pull requests. |
+| **Prometheus Integration** | Extend `/metrics` with request latency histograms and model inference times. |
 
 ## 🖼️ Visual Demos & Samples
 
@@ -562,7 +430,17 @@ This section documents planned improvements and known issues that are deferred f
 
 ![Mock Aadhaar](media/mock_aadhaar_front.png)
 
-*Source: [News18](https://www.news18.com/tech/chatgpt-generating-fake-aadhaar-pan-card-new-image-feature-heres-why-we-shouldnt-misuse-it-what-we-know-amid-social-media-buzz-ws-l-9287099.html). This mock image was featured in a report highlighting the security risks and misuse of AI-generated fraudulent identity documents.*
+*Source: [News18](https://www.news18.com/tech/chatgpt-generating-fake-aadhaar-pan-card-new-image-feature-heres-why-we-shouldnt-misuse-it-what-we-know-amid-social-media-buzz-ws-l-9287099.html). This mock image was featured in a report highlighting the security risks of AI-generated fraudulent identity documents.*
+
+## ⚠️ Security Considerations
+
+This project is a personal learning prototype and contains known limitations for production use:
+- Unrestricted file upload (no file type enforcement beyond extension)
+- CORS wildcard (`allow_origins=["*"]`) — must be restricted before any deployment
+- No rate limiting on ML inference endpoints
+- No input sanitization beyond basic Pydantic validation
+
+Use only in controlled local development environments.
 
 ## 📄 License
 
